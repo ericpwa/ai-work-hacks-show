@@ -20,6 +20,21 @@ GitHub repo -> Streamlit Community Cloud -> Supabase PostgreSQL
 - 課堂資料保存 90 天；重要作品由老師 CSV 匯出後自行留存。
 - 本機仍可用 SQLite fallback 做開發與離線 demo。
 
+## 正式上線狀態
+
+v0.3 Cloud Ready 已上線：
+
+```text
+https://ai-work-hacks-classroom.streamlit.app/
+```
+
+結案交付文件：
+
+- [老師結案交付文件](docs/TEACHER_HANDOFF_v0.3.md)
+- [真實課堂測試 Checklist](docs/REAL_CLASSROOM_TEST_CHECKLIST_v0.3.md)
+
+注意：正式老師 PIN、Supabase key 等 secret 只放在 Streamlit Cloud Secrets，不要寫入 GitHub。
+
 ## 功能
 
 - 課堂代碼：不同班級或梯次可用不同 `class_code` 隔離資料。
@@ -103,13 +118,13 @@ app.py
 6. App URL 建議設定成：
 
 ```text
-ai-work-hacks
+ai-work-hacks-classroom
 ```
 
 7. 部署後分享固定網址，例如：
 
 ```text
-https://ai-work-hacks.streamlit.app
+https://ai-work-hacks-classroom.streamlit.app
 ```
 
 ## 資料保存政策

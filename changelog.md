@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-06-05 v0.3 handoff
+
+- 新增老師結案交付文件：`docs/TEACHER_HANDOFF_v0.3.md`。
+- 新增真實課堂測試 checklist：`docs/REAL_CLASSROOM_TEST_CHECKLIST_v0.3.md`。
+- 更新 README，補上正式網址與交付文件入口。
+- 更新 `next_actions.md`，將部署任務改為真實課堂測試與 v0.4 優先排序。
+
 ## 2026-06-05
 
 - 升級為「v0.3 Cloud Ready」。
