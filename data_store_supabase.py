@@ -41,6 +41,16 @@ def normalize_link(link: str) -> str:
     return cleaned
 
 
+def normalize_rating(rating: int) -> int:
+    try:
+        score = int(rating)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("請選擇 1 到 5 顆星。") from exc
+    if score < 1 or score > 5:
+        raise ValueError("請選擇 1 到 5 顆星。")
+    return score
+
+
 def _secret_value(key: str, default: str = "") -> str:
     if os.getenv(key):
         return os.getenv(key, default)
@@ -160,17 +170,19 @@ def create_submission(
     return int(result.data[0]["id"])
 
 
-def add_vote(submission_id: int, *, class_code: str, voter_label: str) -> None:
+def add_vote(submission_id: int, *, class_code: str, voter_label: str, rating: int = 1) -> None:
     code = normalize_class_code(class_code)
     voter = normalize_required(voter_label, "學員代碼")
+    score = normalize_rating(rating)
     try:
         _execute(
             client().rpc(
-                "ai_work_hacks_add_vote_once",
+                "ai_work_hacks_add_vote_rating_once",
                 {
                     "p_submission_id": int(submission_id),
                     "p_class_code": code,
                     "p_voter_label": voter,
+                    "p_rating": score,
                 },
             )
         )

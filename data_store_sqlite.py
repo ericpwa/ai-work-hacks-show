@@ -42,6 +42,16 @@ def normalize_link(link: str) -> str:
     return cleaned
 
 
+def normalize_rating(rating: int) -> int:
+    try:
+        score = int(rating)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("請選擇 1 到 5 顆星。") from exc
+    if score < 1 or score > 5:
+        raise ValueError("請選擇 1 到 5 顆星。")
+    return score
+
+
 @contextmanager
 def get_connection(db_path: Path | str = DB_PATH) -> Iterator[sqlite3.Connection]:
     path = Path(db_path)
@@ -99,6 +109,7 @@ def init_db(db_path: Path | str = DB_PATH) -> None:
                 class_code TEXT NOT NULL DEFAULT 'AIHACKS-0605',
                 submission_id INTEGER NOT NULL,
                 voter_label TEXT NOT NULL,
+                rating INTEGER NOT NULL DEFAULT 1 CHECK (rating BETWEEN 1 AND 5),
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE,
                 UNIQUE (class_code, submission_id, voter_label)
@@ -109,6 +120,7 @@ def init_db(db_path: Path | str = DB_PATH) -> None:
         _add_column(conn, "submissions", "class_code", "TEXT NOT NULL DEFAULT 'AIHACKS-0605'")
         _add_column(conn, "submissions", "hidden", "INTEGER NOT NULL DEFAULT 0")
         _add_column(conn, "votes", "class_code", "TEXT NOT NULL DEFAULT 'AIHACKS-0605'")
+        _add_column(conn, "votes", "rating", "INTEGER NOT NULL DEFAULT 1 CHECK (rating BETWEEN 1 AND 5)")
 
         conn.executescript(
             """
@@ -242,10 +254,12 @@ def add_vote(
     *,
     class_code: str,
     voter_label: str,
+    rating: int = 1,
     db_path: Path | str = DB_PATH,
 ) -> None:
     code = normalize_class_code(class_code)
     voter = normalize_required(voter_label, "學員代碼")
+    score = normalize_rating(rating)
     now = utc_now()
     with get_connection(db_path) as conn:
         conn.execute("BEGIN IMMEDIATE;")
@@ -270,10 +284,10 @@ def add_vote(
         try:
             conn.execute(
                 """
-                INSERT INTO votes (class_code, submission_id, voter_label, created_at)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO votes (class_code, submission_id, voter_label, rating, created_at)
+                VALUES (?, ?, ?, ?, ?)
                 """,
-                (code, submission_id, voter, now),
+                (code, submission_id, voter, score, now),
             )
         except sqlite3.IntegrityError as exc:
             conn.execute("ROLLBACK;")
@@ -281,11 +295,11 @@ def add_vote(
         conn.execute(
             """
             UPDATE submissions
-               SET votes = votes + 1,
+               SET votes = votes + ?,
                    updated_at = ?
              WHERE id = ?
             """,
-            (now, submission_id),
+            (score, now, submission_id),
         )
         conn.execute("COMMIT;")
 

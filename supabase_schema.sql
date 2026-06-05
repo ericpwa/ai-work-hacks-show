@@ -31,9 +31,13 @@ create table if not exists public.votes (
     class_code text not null references public.classes(class_code) on delete cascade,
     submission_id bigint not null references public.submissions(id) on delete cascade,
     voter_label text not null,
+    rating integer not null default 1 check (rating between 1 and 5),
     created_at timestamptz not null default now(),
     unique (class_code, submission_id, voter_label)
 );
+
+alter table public.votes
+    add column if not exists rating integer not null default 1 check (rating between 1 and 5);
 
 create index if not exists idx_aiwh_submissions_class_day_created
     on public.submissions(class_code, day, created_at desc);
@@ -55,15 +59,20 @@ grant select, insert, update, delete on table public.votes to service_role;
 grant usage, select on sequence public.submissions_id_seq to service_role;
 grant usage, select on sequence public.votes_id_seq to service_role;
 
-create or replace function public.ai_work_hacks_add_vote_once(
+create or replace function public.ai_work_hacks_add_vote_rating_once(
     p_submission_id bigint,
     p_class_code text,
-    p_voter_label text
+    p_voter_label text,
+    p_rating integer default 1
 )
 returns void
 language plpgsql
 as $$
 begin
+    if p_rating < 1 or p_rating > 5 then
+        raise exception 'invalid_rating';
+    end if;
+
     if not exists (
         select 1
           from public.submissions
@@ -74,14 +83,27 @@ begin
         raise exception 'submission_not_found';
     end if;
 
-    insert into public.votes (class_code, submission_id, voter_label)
-    values (p_class_code, p_submission_id, trim(p_voter_label));
+    insert into public.votes (class_code, submission_id, voter_label, rating)
+    values (p_class_code, p_submission_id, trim(p_voter_label), p_rating);
 
     update public.submissions
-       set votes = votes + 1,
+       set votes = votes + p_rating,
            updated_at = now()
      where id = p_submission_id
        and class_code = p_class_code;
+end;
+$$;
+
+create or replace function public.ai_work_hacks_add_vote_once(
+    p_submission_id bigint,
+    p_class_code text,
+    p_voter_label text
+)
+returns void
+language plpgsql
+as $$
+begin
+    perform public.ai_work_hacks_add_vote_rating_once(p_submission_id, p_class_code, p_voter_label, 1);
 end;
 $$;
 
@@ -113,11 +135,12 @@ end;
 $$;
 
 revoke all on function public.ai_work_hacks_add_vote_once(bigint, text, text) from anon, authenticated;
+revoke all on function public.ai_work_hacks_add_vote_rating_once(bigint, text, text, integer) from anon, authenticated;
 revoke all on function public.ai_work_hacks_purge_old_data(timestamptz) from anon, authenticated;
 grant execute on function public.ai_work_hacks_add_vote_once(bigint, text, text) to service_role;
+grant execute on function public.ai_work_hacks_add_vote_rating_once(bigint, text, text, integer) to service_role;
 grant execute on function public.ai_work_hacks_purge_old_data(timestamptz) to service_role;
 
 insert into public.classes (class_code, class_title, phase)
 values ('AIHACKS-0605', 'AI Work Hacks 課堂', 'collecting')
 on conflict (class_code) do nothing;
-

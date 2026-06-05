@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-06-05 v0.3.1 classroom voting fix
+
+- 修正投票 UX：學生先選擇 1 到 5 顆星，確認後才送出，不再點一次就直接投票。
+- 投票資料層新增 `rating`，每票可記錄 1 到 5 星，排行榜改以累積星數排序。
+- 新增 `supabase_migration_v0.3.1_rating.sql`，支援線上 Supabase 無痛升級並保留既有資料。
+- 更新 smoke test，覆蓋多星投票、無效星數阻擋與一人一票規則。
+
 ## 2026-06-05 v0.3 handoff
 
 - 新增老師結案交付文件：`docs/TEACHER_HANDOFF_v0.3.md`。

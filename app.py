@@ -91,6 +91,14 @@ st.markdown(
         color: #6b4f00;
         font-weight: 700;
     }
+    .star-preview {
+        font-size: 1.45rem;
+        letter-spacing: 2px;
+        line-height: 1.2;
+        margin: 0.2rem 0 0.45rem;
+    }
+    .star-on { color: #f5b301; }
+    .star-off { color: #cbd5e1; }
     .stage-card {
         border-left: 6px solid #0f766e;
         padding: 20px 24px;
@@ -152,6 +160,59 @@ def render_phase_banner(class_info: dict[str, str]) -> None:
     )
 
 
+def render_star_preview(rating: int) -> str:
+    stars = []
+    for index in range(1, 6):
+        css_class = "star-on" if index <= rating else "star-off"
+        stars.append(f'<span class="{css_class}">★</span>')
+    return f'<div class="star-preview">{"".join(stars)}</div>'
+
+
+def render_rating_control(row, *, key_prefix: str, disabled: bool) -> None:
+    submission_id = int(row["id"])
+    rating_key = f"{key_prefix}_rating_{submission_id}"
+    st.session_state.setdefault(rating_key, 0)
+    current_rating = int(st.session_state[rating_key])
+
+    st.caption("選擇星數")
+    st.markdown(render_star_preview(current_rating), unsafe_allow_html=True)
+
+    star_cols = st.columns(5)
+    for rating in range(1, 6):
+        selected = current_rating >= rating
+        label = "★" if selected else "☆"
+        if star_cols[rating - 1].button(
+            label,
+            key=f"{rating_key}_{rating}",
+            width="stretch",
+            disabled=disabled,
+            help=f"選擇 {rating} 顆星",
+        ):
+            st.session_state[rating_key] = rating
+            st.rerun()
+
+    submit_label = f"送出 {current_rating} 顆星" if current_rating else "請先選星數"
+    if st.button(
+        submit_label,
+        key=f"{key_prefix}_submit_{submission_id}",
+        width="stretch",
+        disabled=disabled or current_rating == 0,
+    ):
+        try:
+            add_vote(
+                submission_id,
+                class_code=current_class_code(),
+                voter_label=st.session_state.get("student_code", ""),
+                rating=current_rating,
+            )
+        except ValueError as exc:
+            st.warning(str(exc))
+        else:
+            st.session_state[rating_key] = 0
+            st.toast(f"已寫入 {current_rating} 顆星。")
+            st.rerun()
+
+
 def render_card(row, *, key_prefix: str, allow_vote: bool = True) -> None:
     st.markdown(
         f"""
@@ -168,19 +229,7 @@ def render_card(row, *, key_prefix: str, allow_vote: bool = True) -> None:
     with link_col:
         st.link_button("開啟作品", row["link"], width="stretch")
     with vote_col:
-        disabled = not allow_vote
-        if st.button("投 1 顆星", key=f"{key_prefix}_{int(row['id'])}", width="stretch", disabled=disabled):
-            try:
-                add_vote(
-                    int(row["id"]),
-                    class_code=current_class_code(),
-                    voter_label=st.session_state.get("student_code", ""),
-                )
-            except ValueError as exc:
-                st.warning(str(exc))
-            else:
-                st.toast("已寫入投票。")
-                st.rerun()
+        render_rating_control(row, key_prefix=key_prefix, disabled=not allow_vote)
 
 
 with st.sidebar:

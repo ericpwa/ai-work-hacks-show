@@ -55,18 +55,25 @@ def main() -> None:
             db_path=db_path,
         )
 
-        add_vote(first_id, class_code=class_code, voter_label="A01", db_path=db_path)
-        add_vote(first_id, class_code=class_code, voter_label="A02", db_path=db_path)
-        add_vote(second_id, class_code=class_code, voter_label="A01", db_path=db_path)
+        add_vote(first_id, class_code=class_code, voter_label="A01", rating=3, db_path=db_path)
+        add_vote(first_id, class_code=class_code, voter_label="A02", rating=2, db_path=db_path)
+        add_vote(second_id, class_code=class_code, voter_label="A01", rating=4, db_path=db_path)
 
         duplicate_blocked = False
         try:
-            add_vote(first_id, class_code=class_code, voter_label="A01", db_path=db_path)
+            add_vote(first_id, class_code=class_code, voter_label="A01", rating=5, db_path=db_path)
         except ValueError:
             duplicate_blocked = True
         assert duplicate_blocked
 
-        assert stats(class_code, db_path) == {"submission_count": 2, "vote_count": 3, "voter_count": 2}
+        invalid_rating_blocked = False
+        try:
+            add_vote(second_id, class_code=class_code, voter_label="A03", rating=6, db_path=db_path)
+        except ValueError:
+            invalid_rating_blocked = True
+        assert invalid_rating_blocked
+
+        assert stats(class_code, db_path) == {"submission_count": 2, "vote_count": 9, "voter_count": 2}
         assert stats("OTHER-CLASS", db_path) == {"submission_count": 1, "vote_count": 0, "voter_count": 0}
         assert len(query_submissions(class_code=class_code, day="Day 1", db_path=db_path)) == 1
         assert len(query_submissions(class_code=class_code, search="weekly", db_path=db_path)) == 1
