@@ -263,5 +263,5 @@ def reset_votes(class_code: str) -> None:
 
 def purge_old_data(*, retention_days: int = 90) -> int:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=retention_days)).isoformat(timespec="seconds")
-    result = _execute(client().rpc("ai_work_hacks_purge_old_data", {"p_cutoff": cutoff}))
-    return int(result.data or 0)
+    result = _execute(client().table("submissions").delete().lt("created_at", cutoff))
+    return len(result.data or [])
