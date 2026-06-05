@@ -1,0 +1,21 @@
+# QA Checklist
+
+- [x] Streamlit 主程式已建立。
+- [x] 資料可持久化到本機資料庫。
+- [x] 學員提交後可重新查詢。
+- [x] 投票使用交易式寫入。
+- [x] 排行榜依星數排序。
+- [x] 可依展期、關鍵字與排序條件查詢。
+- [x] 未使用外部網路、Apps 或 Connectors。
+- [x] v0.2 已支援課堂代碼資料隔離。
+- [x] v0.2 已支援同一學員代碼對同一作品只能投一次。
+- [x] v0.2 已支援老師 PIN 後台。
+- [x] v0.2 已支援投影展示模式。
+- [x] v0.2 已支援課堂流程：收件中、投票中、公布結果。
+- [x] v0.2 smoke test 已覆蓋課堂隔離、一人一票、隱藏作品、重置投票。
+- [x] v0.3 已支援 Supabase Cloud data store。
+- [x] v0.3 已保留 SQLite local fallback。
+- [x] v0.3 已新增 90 天資料保存 / 清理流程。
+- [x] v0.3 已新增 Streamlit Cloud secrets 範本。
+- [x] v0.3 已新增 Supabase schema SQL。
+- [x] v0.3 已通過 Python 編譯檢查、SQLite smoke test、Supabase store import check。
