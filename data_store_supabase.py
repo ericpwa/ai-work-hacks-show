@@ -175,15 +175,16 @@ def add_vote(submission_id: int, *, class_code: str, voter_label: str, rating: i
     voter = normalize_required(voter_label, "學員代碼")
     score = normalize_rating(rating)
     try:
+        payload = {
+            "p_submission_id": int(submission_id),
+            "p_class_code": code,
+            "p_voter_label": voter,
+            "p_rating": score,
+        }
         _execute(
             client().rpc(
                 "ai_work_hacks_add_vote_rating_once",
-                {
-                    "p_submission_id": int(submission_id),
-                    "p_class_code": code,
-                    "p_voter_label": voter,
-                    "p_rating": score,
-                },
+                params=payload,
             )
         )
     except ValueError as exc:
