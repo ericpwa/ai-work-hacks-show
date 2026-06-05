@@ -6,6 +6,7 @@
 - 投票資料層新增 `rating`，每票可記錄 1 到 5 星，排行榜改以累積星數排序。
 - 新增 `supabase_migration_v0.3.1_rating.sql`，支援線上 Supabase 無痛升級並保留既有資料。
 - 更新 smoke test，覆蓋多星投票、無效星數阻擋與一人一票規則。
+- Hotfix：將 Supabase RPC 呼叫改為 keyword `params=`，並鎖定 Supabase SDK 版本，修正線上送出星數時的 TypeError。
 
 ## 2026-06-05 v0.3 handoff
 
