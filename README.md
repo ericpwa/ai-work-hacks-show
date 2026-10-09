@@ -131,7 +131,9 @@ https://ai-work-hacks-classroom.streamlit.app
 
 - 課堂資料預設保存 90 天。
 - 老師後台可手動清理超過 90 天資料。
-- App 啟動時 Supabase backend 也會嘗試清理超過 90 天資料。
+- Supabase 啟動與首頁課堂讀取只執行查詢，不建立/更新班級，也不自動清除資料。新班級在學員明確提交或老師管理操作時才建立。
+- 90 天是保存政策；清理須由老師後台明確操作，不是每次啟動自動執行。
+- 資料服務初始化或初次課堂讀取失敗時，首頁顯示暫時無法使用，不揭露原始例外，也不自動切換成另一個資料庫。
 - 優秀或重要作品請課後在老師後台匯出 CSV，另存地端。
 
 ## 本地測試
@@ -142,3 +144,13 @@ cd "/Users/wenanpan/Desktop/Codex/AI Work Hacks 職場大絕 Streamlit MVP"
 ```
 
 這個 smoke test 驗證 SQLite fallback。Supabase Cloud 測試需先設定 Streamlit secrets 並執行 `supabase_schema.sql`。
+
+
+## 啟動安全回歸（無正式資料）
+
+```bash
+python -m pytest -q tests/test_startup_safety.py
+python scripts/smoke_test.py
+```
+
+回歸使用禁止網路的假 Supabase client 與暫存 SQLite，驗證首頁不寫入/清除、連線失敗顯示可讀提示及既有提交/投票隔離規則。這些測試不代表正式雲端連線已恢復；2026-10-09 未存取正式日誌、secrets 或重啟正式站。

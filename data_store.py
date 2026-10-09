@@ -9,6 +9,7 @@ import data_store_sqlite
 
 DEFAULT_CLASS_CODE = data_store_sqlite.DEFAULT_CLASS_CODE
 DEFAULT_PHASE = data_store_sqlite.DEFAULT_PHASE
+normalize_class_code = data_store_sqlite.normalize_class_code
 
 
 def _secret_value(key: str, default: str = "") -> str:
@@ -91,4 +92,5 @@ def reset_votes(*args: Any, **kwargs: Any) -> Any:
 
 def purge_old_data(*args: Any, **kwargs: Any) -> Any:
     return _backend().purge_old_data(*args, **kwargs)
+
 
