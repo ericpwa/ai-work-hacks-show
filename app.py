@@ -14,6 +14,7 @@ from data_store import (
     ensure_class,
     get_class,
     init_db,
+    normalize_class_code,
     leaderboard,
     list_classes,
     purge_old_data,
@@ -131,7 +132,16 @@ st.markdown(
 )
 
 
-init_db()
+def show_store_unavailable() -> None:
+    st.title(APP_TITLE)
+    st.error("資料服務暫時無法使用。請稍後重試或請管理員查核部署日誌。")
+    st.stop()
+
+
+try:
+    init_db()
+except Exception:
+    show_store_unavailable()
 
 
 def safe(value: object) -> str:
@@ -139,7 +149,7 @@ def safe(value: object) -> str:
 
 
 def current_class_code() -> str:
-    return ensure_class(st.session_state.get("class_code", DEFAULT_CLASS_CODE))
+    return normalize_class_code(st.session_state.get("class_code", DEFAULT_CLASS_CODE))
 
 
 def render_phase_banner(class_info: dict[str, str]) -> None:
@@ -241,7 +251,11 @@ with st.sidebar:
         value=st.session_state.get("class_code", DEFAULT_CLASS_CODE),
         help="同一堂課請使用同一個代碼，例如 AIHACKS-0605。",
     )
-    st.session_state["class_code"] = ensure_class(class_code_input)
+    try:
+        st.session_state["class_code"] = normalize_class_code(class_code_input)
+    except ValueError as exc:
+        st.error(str(exc))
+        st.stop()
 
     st.session_state["student_code"] = st.text_input(
         "學員代碼 *",
@@ -282,8 +296,11 @@ with st.sidebar:
 
 
 class_code = current_class_code()
-class_info = get_class(class_code)
-current_stats = stats(class_code)
+try:
+    class_info = get_class(class_code)
+    current_stats = stats(class_code)
+except Exception:
+    show_store_unavailable()
 
 st.title(APP_TITLE)
 backend_name = active_backend_name()
@@ -465,3 +482,4 @@ with tab_admin:
         st.divider()
         st.markdown("**所有課堂**")
         st.dataframe(list_classes(), width="stretch", hide_index=True)
+

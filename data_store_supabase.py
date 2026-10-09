@@ -84,8 +84,8 @@ def _execute(query: Any) -> Any:
 
 
 def init_db() -> None:
-    ensure_class(DEFAULT_CLASS_CODE, "AI Work Hacks 課堂")
-    purge_old_data(retention_days=90)
+    # Startup checks connectivity without changing classroom records.
+    _execute(client().table("classes").select("class_code").limit(1))
 
 
 def ensure_class(class_code: str, class_title: str = "") -> str:
@@ -110,9 +110,12 @@ def ensure_class(class_code: str, class_title: str = "") -> str:
 
 
 def get_class(class_code: str) -> dict[str, str]:
-    code = ensure_class(class_code)
+    code = normalize_class_code(class_code)
     result = _execute(client().table("classes").select("*").eq("class_code", code).limit(1))
-    return dict(result.data[0])
+    if result.data:
+        return dict(result.data[0])
+    # A new classroom is persisted only by an explicit submission/admin action.
+    return {"class_code": code, "class_title": "", "phase": DEFAULT_PHASE}
 
 
 def list_classes() -> pd.DataFrame:
@@ -278,3 +281,4 @@ def purge_old_data(*, retention_days: int = 90) -> int:
     cutoff = (datetime.now(timezone.utc) - timedelta(days=retention_days)).isoformat(timespec="seconds")
     result = _execute(client().table("submissions").delete().lt("created_at", cutoff))
     return len(result.data or [])
+
